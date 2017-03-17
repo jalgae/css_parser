@@ -2,8 +2,97 @@
 
 
 
+
+
+
 "use strict"
 
+
+
+
+
+
+
+/**
+ * @description THis will decode the names
+ * @param {String} name css name
+ */
+const extractNames = (name) => {
+    let nameData = {};
+    
+    name = name.split(',');
+
+    if (name.length === 1) {
+        let sign = name[0].charAt(0);
+        if (sign === '.') {
+            let target = name[0].substring(1, name[0].length);
+            nameData = {
+                type: 'class',
+                name: target 
+            }
+        } 
+        else if (sign === '#') {
+            let target = name[0].substring(1, name[0].length);
+            nameData = {
+                type: 'id',
+                name: target
+            }
+        } else {
+            //For elements here
+        }
+    }
+
+    return nameData;
+}
+
+
+
+/**
+ * @description This will handle formatting the names
+ */
+const formatNames = (data) => {
+    data = data.map((css)=>{
+        css.name = extractNames(css.name);
+        return css;
+    }, this);
+    return data;
+}
+
+
+/**
+ * @description Format CSS attributes to DOM attributes
+ */
+const formatCssAttrToDomAttr = (attr) => {
+    let newAttr = '';
+
+    const upperCaseFirst = (att) => {
+        let a = att.charAt(0).toUpperCase();
+        return a + att.substring(1, att.length);
+    }
+
+    if (attr.charAt(0) == "-") {
+        attr = attr.substring(1, attr.length);
+        attr = attr.split('-');
+        if (attr.length > 1) {
+            attr = attr.map((att)=>{
+                return upperCaseFirst(att);
+            }, this);
+            for (let i = 0; i < attr.length; i++) {
+                newAttr += attr[i];
+            }
+        }
+    }
+    else {
+        attr = attr.split('-');
+        newAttr += attr[0];
+        if (attr.length > 1) {
+            for (let i = 1; i < attr.length; i++) {
+                newAttr += upperCaseFirst(attr[i]);
+            }
+        }
+    }
+    return newAttr;
+}
 
 
 /**
@@ -11,6 +100,7 @@
  * @param {String} values text values
  */
 const formatValues = (values) => {
+    let value = {};
     console.log(values);
     let colValues = String(values).split(';');
 
@@ -27,7 +117,18 @@ const formatValues = (values) => {
         return val.length === 2;
     });
 
-    return colValues;
+    for (let i = 0; i < colValues.length; i++) {
+        let attr = colValues[i][0];
+        let val = colValues[i][1];
+        if (val.charAt(0) == '"' && val.charAt(val.length - 1) == '"') {
+            val = val.substring(1, val.length - 2);
+        }
+        else if (val.charAt(0) == "'" && val.charAt() == "'") {
+            val = val.substring(1, val.length - 2);
+        }
+        value[formatCssAttrToDomAttr(attr)] = val;
+    }
+    return value;
 }
 
 
@@ -42,6 +143,7 @@ const formatValuesToAttributes = (data) => {
         d.value = formatValues(d.value);
         return d;
     }, this);
+    _data = formatNames(_data);
     console.log('formatValuesToAttributes', _data);
     return _data;
 }
